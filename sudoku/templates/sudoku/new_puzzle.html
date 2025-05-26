@@ -1,0 +1,1273 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if input_grid %}Puzzle Results{% else %}New Sudoku Puzzle{% endif %} - Sudoku Master</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Modern approach - just these main sizes: -->
+    <link rel="icon" type="image/x-icon" href="{% static 'sudoku/favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'sudoku/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'sudoku/favicon-16x16.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'sudoku/apple-touch-icon.png' %}">
+
+    <!-- Complete set for maximum compatibility: -->
+    <link rel="apple-touch-icon" sizes="57x57" href="{% static 'sudoku/apple-touch-icon-57x57.png' %}">
+    <link rel="apple-touch-icon" sizes="60x60" href="{% static 'sudoku/apple-touch-icon-60x60.png' %}">
+    <link rel="apple-touch-icon" sizes="72x72" href="{% static 'sudoku/apple-touch-icon-72x72.png' %}">
+    <link rel="apple-touch-icon" sizes="76x76" href="{% static 'sudoku/apple-touch-icon-76x76.png' %}">
+    <link rel="apple-touch-icon" sizes="114x114" href="{% static 'sudoku/apple-touch-icon-114x114.png' %}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{% static 'sudoku/apple-touch-icon-120x120.png' %}">
+    <link rel="apple-touch-icon" sizes="144x144" href="{% static 'sudoku/apple-touch-icon-144x144.png' %}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'sudoku/apple-touch-icon-152x152.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'sudoku/apple-touch-icon.png' %}">
+
+
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #06b6d4;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            padding: 2rem;
+            max-width: 800px;
+        }
+
+        .page-title {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: bold;
+        }
+
+        /* Sudoku Grid Styles */
+        table.sudoku-grid {
+            border-collapse: collapse;
+            margin: 20px auto;
+            width: 450px;
+            height: 450px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        table.sudoku-grid td {
+            border: 1px solid #ddd;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 22px;
+            vertical-align: middle;
+            position: relative;
+        }
+
+        /* Enhanced 3x3 sub-grid borders */
+        table.sudoku-grid td:nth-child(3n+1) {
+            border-left: 3px solid var(--primary-color);
+        }
+
+        table.sudoku-grid td:nth-child(3n) {
+            border-right: 3px solid var(--primary-color);
+        }
+
+        tr:nth-child(3n+1) td {
+            border-top: 3px solid var(--primary-color);
+        }
+
+        tr:nth-child(3n) td {
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        td:hover {
+            background-color: #f8f9fa !important;
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
+
+        /* Input field styles */
+        .sudoku-input {
+            width: 45px;
+            height: 45px;
+            text-align: center;
+            font-size: 22px;
+            border: none;
+            outline: none;
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: var(--primary-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .sudoku-input:focus {
+            background-color: #e3f2fd;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            transform: scale(1.1);
+        }
+
+        /* Pre-filled cells */
+        .sudoku-grid .P {
+            font-weight: bold;
+            color: #333;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        /* Control Panel Styles */
+        .control-panel {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .difficulty-selector {
+            margin-bottom: 1rem;
+        }
+
+        .difficulty-selector select {
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Button Styles */
+        .btn-custom {
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            border: none;
+            margin: 0.5rem;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+            color: white;
+        }
+
+        .btn-success-custom {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: white;
+        }
+
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+            color: white;
+        }
+
+        .btn-warning-custom {
+            background: linear-gradient(135deg, var(--accent-color), #d97706);
+            color: white;
+        }
+
+        .btn-warning-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+            color: white;
+        }
+
+        .btn-secondary-custom {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+
+        .btn-secondary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(107, 114, 128, 0.3);
+            color: white;
+        }
+
+        /* Timer Styles */
+        .timer-display {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: inline-block;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Alert Styles */
+        .custom-alert {
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-success-custom {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border-left: 5px solid var(--success-color);
+        }
+
+        .alert-danger-custom {
+            background: linear-gradient(135deg, #f8d7da, #f1b0b7);
+            color: #721c24;
+            border-left: 5px solid var(--danger-color);
+        }
+
+        /* Result Legend */
+        .result-legend {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem auto;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .legend-correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .legend-wrong {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .legend-missing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        /* Transaction ID Styles */
+        .transaction-info {
+            background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+            border: 2px solid var(--secondary-color);
+        }
+
+        .trx-id {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin: 0 10px;
+            color: var(--primary-color);
+            border: 1px solid #ddd;
+        }
+
+        .copy-btn {
+            border-radius: 8px;
+            padding: 8px 15px;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: #1f2937;
+            color: #d1d5db;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .footer a {
+            color: #9ca3af;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: var(--secondary-color);
+        }
+
+.guess {
+    color: orange !important;
+    background-color: #fff3e0 !important;
+}
+
+.sudoku-input.guess {
+    color: orange !important;
+    background-color: #fff3e0 !important;
+}
+
+.sudoku-input:focus.guess {
+    background-color: #fff3e0;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+    transform: scale(1.1);
+    color: orange;
+}
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                margin: 1rem;
+                padding: 1rem;
+            }
+
+            table.sudoku-grid {
+                width: 350px;
+                height: 350px;
+            }
+
+            table.sudoku-grid td {
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+            }
+
+            .sudoku-input {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+
+            .timer-display {
+                font-size: 1.2rem;
+                padding: 0.8rem 1.5rem;
+            }
+        }
+
+        /* Animation for page transitions */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            {% if input_grid %}
+            <a class="navbar-brand" href="{% url 'index' %}" style="font-size: 2.5rem;">
+                <!--i class="fas fa-th-large me-2"></i--><img src="{% static 'sudoku/images/logo.png' %}"
+                    alt="Sudoku Master" style="height: 75px;" class="me-2">Sudoku Master
+            </a>
+            {% else %}
+            <p class="navbar-brand" style="font-size: 2.5rem;">
+                <!--i class="fas fa-th-large me-2"></i--><img src="{% static 'sudoku/images/logo.png' %}"
+                    alt="Sudoku Master" style="height: 75px;" class="me-2">Sudoku Master
+            </p>
+            {% endif %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Show navigation only when results are displayed -->
+            {% if input_grid %}
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'new_puzzle' %}">
+                            <i class="fas fa-play me-1"></i>New Puzzle
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'view_puzzle' %}">
+                            <i class="fas fa-history me-1"></i>View Results
+                        </a>
+                    </li>
+                    {% if user.is_authenticated and user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'health_check' %}" target="_blank">
+                            <i class="fas fa-heart-pulse me-1"></i>Status
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <div class="main-content fade-in">
+
+            {% if input_grid %}
+            <h1 class="page-title">
+                <i class="fas fa-trophy me-2"></i>Puzzle Results
+            </h1>
+            {% else %}
+            <h1 class="page-title">
+                <i class="fas fa-puzzle-piece me-2"></i>New Sudoku Puzzle
+            </h1>
+            {% endif %}
+
+            <!-- Control Panel -->
+            {% if not input_grid %}
+            <div class="control-panel">
+                <form method="GET" action="{% url 'new_puzzle' %}" onsubmit="return confirmNewPuzzle()">
+                    <div class="difficulty-selector">
+                        <label for="difficulty" class="form-label fw-bold text-primary">
+                            <i class="fas fa-sliders-h me-2"></i>Select Difficulty Level:
+                        </label>
+                        <select id="difficulty" name="difficulty" class="form-select d-inline-block w-auto mx-5">
+                            <option value="easy">🟢 Easy (25 to 35 cells to fill)</option>
+                            <option value="medium" selected>🟡 Medium (35 to 45 cells to fill)
+                            </option>
+                            <option value="hard">🟠 Hard (45 to 55 cells to fill)</option>
+                            <option value="ex-hard">🔴 Extra Hard (55 to 60 cells to fill)&nbsp;&nbsp;&nbsp;&nbsp;
+                            </option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-custom btn-success-custom">
+                        <i class="fas fa-refresh me-2"></i>Generate New Puzzle
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Alert Messages -->
+            {% if message %}
+            <div class="custom-alert {% if success %}alert-success-custom{% else %}alert-danger-custom{% endif %}">
+                <div class="text-center">
+                    {% if success %}
+                    <h4><i class="fas fa-trophy me-2"></i>Congratulations!</h4>
+                    {% else %}
+                    <h4><i class="fas fa-exclamation-triangle me-2"></i>Not Quite There!</h4>
+                    {% endif %}
+                    <p class="mb-0">{{ message }}</p>
+                </div>
+            </div>
+            {% else %}
+            {% if not input_grid %}
+            <div class="text-center mb-4">
+                <h3 class="text-primary mb-3">
+                    <i class="fas fa-brain me-2"></i>Challenge Your Mind With This
+                    {% if difficulty == 'easy' %}Easy
+                    {% elif difficulty == 'medium' %}Medium
+                    {% elif difficulty == 'hard' %}Hard
+                    {% elif difficulty == 'ex-hard' %}Extra Hard
+                    {% else %}Medium{% endif %} Puzzle
+                </h3>
+                <p class="text-muted fst-italic">Fill in the empty cells so that each row, column, and 3×3 box contains
+                    the digits
+                    1-9 exactly once.</p>
+                <div class="text-center mb-2">
+                    <small class="text-muted fst-italic">
+                        💡 <strong>Tip:</strong> Right-click a cell to mark it as a <span
+                            style="color: orange;">guess</span> using
+                        the format
+                        <code><strong><span style="color: orange;">"?{number}"</span></strong></code>. Guesses won't be
+                        submitted.
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <!-- Timer Display -->
+            <div class="text-center">
+                {% if input_grid %}
+                <div class="timer-display">
+                    <i class="fas fa-clock me-2"></i>Time Taken: {{ time_taken }}
+                </div>
+                {% else %}
+                <div class="timer-display">
+                    <i class="fas fa-stopwatch me-2"></i>Time: <span id="timer">00:00:00</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sudoku Grid -->
+            <form method="POST" action="/sudoku/check/" onsubmit="return confirmSubmit()">
+                {% csrf_token %}
+                <div class="text-center">
+                    <table class="sudoku-grid">
+                        {% load custom_filters %}
+                        {% for row in grid %}
+                        <tr>
+                            {% for cell in row %}
+                            {% if cell == 0 %}
+                            <!-- Editable cell (user needs to input a value) -->
+                            {% if input_grid %}
+                            <!-- Results are being displayed -->
+                            {% if user_input_status|get_item_at_index:forloop.parentloop.counter0|get_item_at_index:forloop.counter0 == 'C' %}
+                            <td class="alert-success">
+                                <strong>{{ input_grid|get_item_at_index:forloop.parentloop.counter0|get_item_at_index:forloop.counter0 }}</strong>
+                            </td>
+                            {% elif user_input_status|get_item_at_index:forloop.parentloop.counter0|get_item_at_index:forloop.counter0 == 'W' %}
+                            <td class="alert-danger">
+                                <sup class="text-danger fw-bold">{{ input_grid|get_item_at_index:forloop.parentloop.counter0|get_item_at_index:forloop.counter0 }}</sup>
+                                <br>
+                                <ins class="text-success fw-bold">{{ solution|get_item_at_index:forloop.parentloop.counter0|get_item_at_index:forloop.counter0 }}</ins>
+                            </td>
+                            {% else %}
+                            <td class="alert-warning">
+                                <strong>{{ solution|get_item_at_index:forloop.parentloop.counter0|get_item_at_index:forloop.counter0 }}</strong>
+                            </td>
+                            {% endif %}
+                            {% else %}
+                            <!-- Game is in progress - show input field -->
+                            <td>
+                                <input type="text" name="cell_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}"
+                                    maxlength="1" size="1" class="sudoku-input"
+                                    oninput="this.value = this.value.replace(/[^1-9.]/g, '').replace(/(\..*)\./g, '$1');"
+                                    autocomplete="off" placeholder="">
+                            </td>
+                            {% endif %}
+                            {% else %}
+                            <!-- Pre-filled cell (not editable) -->
+                            <td><span class="P">{{ cell }}</span></td>
+                            {% endif %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+
+                <!-- Game Controls -->
+                <div class="text-center mt-4">
+                    {% if input_grid %}
+                    <!-- Results are being displayed -->
+                    <a href="{% url 'new_puzzle' %}" class="btn btn-custom btn-primary-custom">
+                        <i class="fas fa-play me-2"></i>Play Again
+                    </a>
+                    <a href="{% url 'view_puzzle' %}" class="btn btn-custom btn-secondary-custom">
+                        <i class="fas fa-search me-2"></i>Find Another Result
+                    </a>
+                    {% else %}
+                    <!-- Game is in progress -->
+                    <button type="submit" class="btn btn-custom btn-primary-custom">
+                        <i class="fas fa-check me-2"></i>Submit Solution
+                    </button>
+                    <button type="button" class="btn btn-custom btn-warning-custom" onclick="clearAllInputs()">
+                        <i class="fas fa-eraser me-2"></i>Clear All
+                    </button>
+                    <a href="{% url 'index' %}" class="btn btn-custom btn-secondary-custom">
+                        <i class="fas fa-home me-2"></i>Back to Home
+                    </a>
+                    {% endif %}
+                </div>
+                <input type="hidden" name="trx_id" value="{{ trx_id }}">
+                <input type="hidden" name="original_grid_state" id="original-grid-state">
+                <input type="hidden" name="user_inputs_state" id="user-inputs-state">
+                <input type="hidden" name="timer_value" id="timer-value">
+
+            </form>
+
+            <!-- Result Legend -->
+            {% if input_grid %}
+            <div class="result-legend">
+                <h5 class="text-center mb-3 fw-bold text-primary">
+                    <i class="fas fa-info-circle me-2"></i>Result Legend
+                </h5>
+                <div class="legend-item legend-correct">
+                    <i class="fas fa-check-circle me-3"></i>
+                    <strong>Correct Answer</strong> - Well done!
+                </div>
+                <div class="legend-item legend-wrong">
+                    <i class="fas fa-times-circle me-3"></i>
+                    <strong>Wrong Answer</strong> - Your input is shown above, correct answer below
+                </div>
+                <div class="legend-item legend-missing">
+                    <i class="fas fa-question-circle me-3"></i>
+                    <strong>Not Attempted</strong> - Shows the correct answer
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Transaction ID Display -->
+            {% if success is not None %}
+            <div class="transaction-info">
+                <h5 class="mb-3 fw-bold text-primary">
+                    <i class="fas fa-receipt me-2"></i>Transaction Details
+                </h5>
+                <p class="mb-3">Save this Transaction ID to view your results later:</p>
+                <div class="d-flex justify-content-center align-items-center flex-wrap">
+                    <span class="trx-id">{{ trx_id }}</span>
+                    <button onclick="copyTrxId()" class="btn btn-outline-success copy-btn">
+                        <i class="fas fa-copy me-2"></i>Copy ID
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="fw-bold mb-3">
+                        <!--i class="fas fa-th-large me-2"></i--><img src="{% static 'sudoku/images/logo.png' %}"
+                            alt="Sudoku Master" style="height: 32px;" class="me-2">
+                        Sudoku Master
+                    </h5>
+                    <p class="mb-3">
+                        Challenge yourself with our intelligent Sudoku puzzles and track your progress over time.
+                    </p>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <!-- Show navigation only when results are displayed -->
+                    {% if input_grid %}
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'index' %}">Home</a></li>
+                        <li class="mb-2"><a href="{% url 'new_puzzle' %}">New Puzzle</a></li>
+                        <li class="mb-2"><a href="{% url 'view_puzzle' %}">View Results</a></li>
+                        {% if user.is_authenticated and user.is_superuser %}
+                        <li class="mb-2"><a href="{% url 'health_check' %}">System Status</a></li>
+                        {% endif %}
+                    </ul>
+                    {% endif %}
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3">Game Features</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><small><i class="fas fa-trophy me-1"></i> Performance Tracking</small></li>
+                        <li class="mb-2"><small><i class="fas fa-clock me-1"></i> Time Management</small></li>
+                        <li class="mb-2"><small><i class="fas fa-brain me-1"></i> Multiple Difficulties</small></li>
+                        <li class="mb-2"><small><i class="fas fa-chart-line me-1"></i> Progress Analytics</small></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: #374151;">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <small>&copy; 2025 Sudoku Master. All rights reserved.</small>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small>Built with Django & Bootstrap</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <!-- JavaScript Functions -->
+    <script>
+        // Copy Transaction ID function
+        function copyTrxId() {
+            const trxId = document.querySelector('.trx-id').textContent;
+            navigator.clipboard.writeText(trxId).then(() => {
+                // Visual feedback
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+                btn.classList.remove('btn-outline-success');
+                btn.classList.add('btn-success');
+
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-success');
+                }, 2000);
+            }).catch(() => {
+                alert('Could not copy to clipboard. Please select and copy manually.');
+            });
+        }
+
+        // Confirmation dialogs
+        function confirmSubmit() {
+            return confirm("Are you sure you want to submit your puzzle solution?");
+        }
+
+        function clearAllInputs() {
+            if (confirm("Are you sure you want to clear all your entries?")) {
+                // Clear input fields
+                const inputs = document.querySelectorAll('input[type="text"]');
+                inputs.forEach(input => {
+                    input.value = '';
+                    input.style.backgroundColor = '';
+                    input.style.color = ''; // reset guess styling
+                    input.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        input.style.transform = 'scale(1)';
+                    }, 200);
+                });
+
+                // Clear any duplicate highlights from pre-filled spans
+                const spans = document.querySelectorAll('td span.P');
+                spans.forEach(span => {
+                    span.style.backgroundColor = '';
+                    span.style.color = '';
+                });
+
+                // Also reset parent td background (in case anything is left behind)
+                const tds = document.querySelectorAll('.sudoku-grid td');
+                tds.forEach(td => {
+                    td.style.backgroundColor = '';
+                    td.style.color = '';
+                });
+
+                // Update backup state
+                updateBackupState();
+            }
+        }
+
+        function confirmNewPuzzle() {
+            const inputs = document.querySelectorAll('input[type="text"]');
+            const hasInputs = Array.from(inputs).some(input => input.value.trim() !== '');
+
+            if (hasInputs) {
+                return confirm("Starting a new puzzle will discard your current progress. Are you sure?");
+            }
+            return true;
+        }
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Function to serialize the current grid state
+        function serializeGridState() {
+            const grid = [];
+
+            // Get the original grid state (prefilled cells)
+            document.querySelectorAll('.sudoku-grid tr').forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('td').forEach(cell => {
+                    const prefilled = cell.querySelector('span.P');
+                    const input = cell.querySelector('input');
+
+                    if (prefilled) {
+                        // This is a prefilled cell
+                        rowData.push(parseInt(prefilled.textContent.trim()));
+                    } else if (input) {
+                        // This is an editable cell (empty in the original grid)
+                        rowData.push(0);
+                    } else {
+                        rowData.push(0);
+                    }
+                });
+                grid.push(rowData);
+            });
+
+            return JSON.stringify(grid);
+        }
+
+        // Function to serialize user inputs
+        function serializeUserInputs() {
+            const userInputs = [];
+
+            document.querySelectorAll('.sudoku-grid tr').forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('td').forEach(cell => {
+                    const input = cell.querySelector('input');
+                    const prefilled = cell.querySelector('span.P');
+
+                    if (prefilled) {
+                        // This is a prefilled cell
+                        rowData.push(parseInt(prefilled.textContent.trim()));
+                    } else if (input) {
+                        // This is an editable cell - get user input or 0
+                        let value = input.value.trim();
+                        // Remove '?' prefix if it's a guess
+                        value = value.replace(/^\?/, '');
+                        rowData.push(value ? parseInt(value) : 0);
+                    } else {
+                        rowData.push(0);
+                    }
+                });
+                userInputs.push(rowData);
+            });
+
+            return JSON.stringify(userInputs);
+        }
+
+        // Function to update backup state in localStorage
+        function updateBackupState() {
+            try {
+                // Get transaction ID if available
+                let trxId = '';
+                const trxElement = document.querySelector('.trx-id');
+                if (trxElement) {
+                    trxId = trxElement.textContent.trim();
+                }
+
+                // Get timer value if available
+                let timerValue = '';
+                const timerElement = document.getElementById('timer');
+                if (timerElement) {
+                    timerValue = timerElement.textContent;
+                }
+
+                // Create backup data
+                const backupData = {
+                    grid: JSON.parse(serializeGridState()),
+                    userInput: JSON.parse(serializeUserInputs()),
+                    timer: timerValue,
+                    trxId: trxId,
+                    timestamp: new Date().toISOString()
+                };
+
+                // Store in localStorage
+                localStorage.setItem('sudokuBackup', JSON.stringify(backupData));
+                console.log('Puzzle state backed up to localStorage');
+            } catch (e) {
+                console.warn('Failed to backup to localStorage:', e);
+            }
+        }
+
+        // Function to restore from localStorage
+        function restoreFromLocalStorage() {
+            try {
+                const backup = localStorage.getItem('sudokuBackup');
+                if (backup) {
+                    const backupData = JSON.parse(backup);
+
+                    // Get current transaction ID if available
+                    const trxElement = document.querySelector('.trx-id');
+                    const currentTrxId = trxElement ? trxElement.textContent.trim() : '';
+
+                    // Only restore if it's for the current puzzle
+                    if (backupData.trxId && backupData.trxId === currentTrxId) {
+                        console.log('Restoring user inputs from backup');
+
+                        // Restore user inputs
+                        if (backupData.userInput && Array.isArray(backupData.userInput)) {
+                            for (let i = 0; i < backupData.userInput.length; i++) {
+                                for (let j = 0; j < backupData.userInput[i].length; j++) {
+                                    const value = backupData.userInput[i][j];
+                                    if (value) {
+                                        const input = document.querySelector(`input[name="cell_${i}_${j}"]`);
+                                        if (input && !input.readOnly) {
+                                            input.value = value;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Check for duplicates after restoring
+                            highlightDuplicates();
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error restoring from localStorage:', e);
+            }
+        }
+
+        // Function to add state data to form on submission
+        function addStateDataToForm(form) {
+            // Add grid state
+            const gridStateField = document.createElement('input');
+            gridStateField.type = 'hidden';
+            gridStateField.name = 'original_grid_state';
+            gridStateField.value = serializeGridState();
+            form.appendChild(gridStateField);
+
+            // Add user inputs
+            const userInputsField = document.createElement('input');
+            userInputsField.type = 'hidden';
+            userInputsField.name = 'user_inputs_state';
+            userInputsField.value = serializeUserInputs();
+            form.appendChild(userInputsField);
+
+            // Add timer value if available
+            const timerElement = document.getElementById('timer');
+            if (timerElement) {
+                const timerField = document.createElement('input');
+                timerField.type = 'hidden';
+                timerField.name = 'timer_value';
+                timerField.value = timerElement.textContent;
+                form.appendChild(timerField);
+            }
+
+            // Add transaction ID if available
+            const trxElement = document.querySelector('.trx-id');
+            if (trxElement) {
+                const trxField = document.createElement('input');
+                trxField.type = 'hidden';
+                trxField.name = 'trx_id';
+                trxField.value = trxElement.textContent.trim();
+                form.appendChild(trxField);
+            }
+
+            console.log('Added state data to form for submission');
+        }
+
+        // Main initialization
+        document.addEventListener('DOMContentLoaded', function () {
+            // Timer functionality
+            const timerElement = document.getElementById('timer');
+            let timerInterval;
+
+            if (timerElement) {
+                // Try to restore timer from localStorage if available
+                let startTime = new Date();
+                let initialElapsedTime = 0;
+
+                try {
+                    const backup = localStorage.getItem('sudokuBackup');
+                    if (backup) {
+                        const backupData = JSON.parse(backup);
+                        // Check if this backup is for the current puzzle
+                        const currentTrxId = document.querySelector('.trx-id')?.textContent || '';
+
+                        if (backupData.trxId && backupData.trxId === currentTrxId) {
+                            // Restore timer from backup
+                            if (backupData.timer) {
+                                const timerParts = backupData.timer.split(':');
+                                if (timerParts.length === 3) {
+                                    const [hours, minutes, seconds] = timerParts.map(Number);
+                                    initialElapsedTime = (hours * 3600 + minutes * 60 + seconds) * 1000;
+                                    // Adjust start time to account for elapsed time
+                                    startTime = new Date(new Date().getTime() - initialElapsedTime);
+                                    console.log('Restored timer from backup:', backupData.timer);
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error restoring timer from backup:', e);
+                }
+
+                // Update timer immediately to show correct time
+                updateTimer();
+
+                // Start timer interval
+                timerInterval = setInterval(updateTimer, 1000);
+
+                function updateTimer() {
+                    const now = new Date();
+                    const elapsedTime = now - startTime;
+
+                    const hours = Math.floor(elapsedTime / 1000 / 60 / 60);
+                    const minutes = Math.floor((elapsedTime / 1000 / 60) % 60);
+                    const seconds = Math.floor((elapsedTime / 1000) % 60);
+
+                    timerElement.textContent =
+                        (hours < 10 ? '0' : '') + hours + ':' +
+                        (minutes < 10 ? '0' : '') + minutes + ':' +
+                        (seconds < 10 ? '0' : '') + seconds;
+                }
+            }
+
+            // Sudoku grid functionality
+            const form = document.querySelector('form[action="/sudoku/check/"]');
+            const cells = document.querySelectorAll('.sudoku-grid td');
+            const inputs = document.querySelectorAll('.sudoku-input');
+
+            // --- Helper: Clear ALL highlights (td, input, span)
+            function clearAllCellHighlights() {
+                document.querySelectorAll('.sudoku-grid td').forEach(td => {
+                    td.style.backgroundColor = ''
+                    td.style.color = ''
+                });
+                document.querySelectorAll('.sudoku-input').forEach(input => {
+                    input.style.backgroundColor = '';
+                    input.style.color = '';
+                });
+                document.querySelectorAll('td span.P').forEach(span => {
+                    span.style.backgroundColor = '';
+                    span.style.color = '';
+                });
+            }
+
+            // --- Highlight duplicates including pre-filled
+            function highlightDuplicates() {
+                // Get all cells in the grid
+                const cells = document.querySelectorAll('.sudoku-grid td');
+
+                // Create 9x9 grids to track cells and their values
+                const grid = [...Array(9)].map(() => Array(9).fill(null));
+                const values = [...Array(9)].map(() => Array(9).fill(null));
+
+                // Fill grids with cells and their values
+                cells.forEach((cell, index) => {
+                    const row = Math.floor(index / 9);
+                    const col = index % 9;
+
+                    const input = cell.querySelector('input');
+                    const span = cell.querySelector('span');
+
+                    if (input) {
+                        let val = input.value.replace('?', '').trim();
+                        grid[row][col] = cell;
+                        values[row][col] = val;
+                    } else if (span) {
+                        grid[row][col] = cell;
+                        values[row][col] = span.textContent.trim();
+                    }
+                });
+
+                // Helper function to mark duplicate cells
+                const markDuplicate = (cell1, cell2) => {
+                    const lightRed = '#ffcccc';
+                    [cell1, cell2].forEach(cell => {
+                        if (!cell) return;
+                        const input = cell.querySelector('input');
+                        const span = cell.querySelector('span');
+                        if (input) {
+                            input.style.backgroundColor = lightRed;
+                            input.style.color = 'red';
+                        } else if (span) {
+                            span.style.backgroundColor = lightRed;
+                            span.style.color = 'red';
+                        } else {
+                            cell.style.backgroundColor = lightRed;
+                            cell.style.color = 'red';
+                        }
+                    });
+                };
+
+                // Check rows for duplicates
+                for (let row = 0; row < 9; row++) {
+                    let valueMap = {};
+                    for (let col = 0; col < 9; col++) {
+                        const val = values[row][col];
+                        if (val && val !== '') {  // Make sure value exists and isn't empty
+                            if (valueMap[val] !== undefined) {
+                                markDuplicate(grid[row][col], grid[row][valueMap[val]]);
+                            } else {
+                                valueMap[val] = col;
+                            }
+                        }
+                    }
+                }
+
+                // Check columns for duplicates
+                for (let col = 0; col < 9; col++) {
+                    let valueMap = {};
+                    for (let row = 0; row < 9; row++) {
+                        const val = values[row][col];
+                        if (val && val !== '') {  // Make sure value exists and isn't empty
+                            if (valueMap[val] !== undefined) {
+                                markDuplicate(grid[row][col], grid[valueMap[val]][col]);
+                            } else {
+                                valueMap[val] = row;
+                            }
+                        }
+                    }
+                }
+
+                // Check 3x3 boxes for duplicates
+                for (let boxRow = 0; boxRow < 3; boxRow++) {
+                    for (let boxCol = 0; boxCol < 3; boxCol++) {
+                        let valueMap = {};
+                        for (let i = 0; i < 3; i++) {
+                            for (let j = 0; j < 3; j++) {
+                                const row = boxRow * 3 + i;
+                                const col = boxCol * 3 + j;
+                                const val = values[row][col];
+                                if (val && val !== '') {  // Make sure value exists and isn't empty
+                                    if (valueMap[val] !== undefined) {
+                                        const [prevRow, prevCol] = valueMap[val];
+                                        markDuplicate(grid[row][col], grid[prevRow][prevCol]);
+                                    } else {
+                                        valueMap[val] = [row, col];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- Enhanced Input Handling: navigation + duplicate checking
+            if (inputs.length > 0) {
+                inputs.forEach(input => {
+                    // Handle keyboard navigation (Tab, Enter, Backspace)
+                    input.addEventListener('keydown', function (e) {
+                        const allInputs = Array.from(document.querySelectorAll('.sudoku-input'));
+                        const currentIndex = allInputs.indexOf(input);
+
+                        if ((e.key === 'Enter' || e.key === 'Tab') && currentIndex >= 0) {
+                            e.preventDefault();
+                            const nextInput = allInputs[currentIndex + 1];
+                            if (nextInput) nextInput.focus();
+                        }
+
+                        if (e.key === 'Backspace' && input.value === '' && currentIndex > 0) {
+                            allInputs[currentIndex - 1].focus();
+                        }
+                    });
+
+                    // Auto-advance on input and validate
+                    input.addEventListener('input', function (e) {
+                        // Clear any existing highlights
+                        clearAllCellHighlights();
+
+                        // Check for duplicate values
+                        highlightDuplicates();
+
+                        //// Highlight guesses in orange
+                        //if (input.value.startsWith('?')) {
+                        //    input.style.color = 'orange';
+                        //} else {
+                        //    input.style.color = '';
+                        //}
+
+                        if (input.value.startsWith('?')) {
+                            input.classList.add('guess');
+                        } else {
+                            if (input.classList.contains('guess')){
+                                input.classList.remove('guess');
+                            }
+                        }
+
+                        // Auto-advance to next cell when a digit is entered
+                        if (input.value.length === 1 && /^[1-9]$/.test(input.value)) {
+                            const allInputs = Array.from(document.querySelectorAll('.sudoku-input'));
+                            const currentIndex = allInputs.indexOf(input);
+                            if (currentIndex >= 0 && currentIndex < allInputs.length - 1) {
+                                setTimeout(() => {
+                                    allInputs[currentIndex + 1].focus();
+                                }, 50); // Small delay to ensure the value is processed
+                            }
+                        }
+
+                        // Update backup state
+                        updateBackupState();
+                    });
+
+                    // Right-click for guesses
+                    input.addEventListener('contextmenu', function (e) {
+                        e.preventDefault();
+                        if (input.value && !input.value.startsWith('?')) {
+                            input.dataset.original = input.value;
+                            input.value = '?' + input.value;
+                            input.style.color = 'orange';
+                            input.classList.add('guess');
+                        } else if (input.value.startsWith('?')) {
+                            input.value = input.dataset.original || '';
+                            input.style.color = '';
+                            input.classList.remove('guess');
+                        }
+
+                        clearAllCellHighlights();
+                        highlightDuplicates();
+
+                        // Update backup state
+                        updateBackupState();
+                    });
+                });
+            }
+
+            // --- Form Submission Guard: block if any guess remains
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    const inputs = document.querySelectorAll('.sudoku-input');
+                    let hasGuess = false;
+
+                    inputs.forEach(input => {
+                        if (input.value.startsWith('?')) {
+                            hasGuess = true;
+                        }
+                    });
+
+                    if (hasGuess) {
+                        e.preventDefault(); // STOP submission
+                        alert("You have guesses marked with '?'. Please remove them before submitting.");
+                        return false;
+                    }
+
+                    // Clean up ? before submitting just in case
+                    inputs.forEach(input => {
+                        if (input.value.startsWith('?')) {
+                            input.value = input.value.substring(1);
+                        }
+                    });
+
+                    // Add hidden fields with state data before submission
+                    addStateDataToForm(this);
+                });
+            }
+
+            // Initial validation on page load
+            highlightDuplicates();
+
+            // Try to restore user inputs from localStorage
+            restoreFromLocalStorage();
+
+            // Set up regular backup interval
+            setInterval(updateBackupState, 30000); // Every 30 seconds
+        });
+    </script>
+</body>
+
+</html>
