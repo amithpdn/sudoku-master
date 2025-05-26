@@ -1115,7 +1115,7 @@ def check_puzzle(request):
                 },
             )
 
-        if correct and grid_complete and is_valid_complete_grid(input_grid):
+        if not correct and grid_complete and is_valid_complete_grid(input_grid):
             msg = f"an alternative solution found for {input_grid}"
             log_puzzle_action(request, "Check puzzle", msg, "DEBUG")
             correct = True

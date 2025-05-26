@@ -30,7 +30,7 @@ A feature-rich Sudoku game web application built with Django. Challenge yourself
 
 ## 🖥️ Screenshots
 
-![Sudoku Master](./01_index.png)
+![Sudoku Master](./image/01_index.png)
 
 ## 🚀 Getting Started
 
@@ -153,12 +153,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
 
 ## More Screenshots
-![Sudoku Master New Puzzle](./02_new_puzzle_1.png)
-![Sudoku Master Types of Inputs](./03_new_puzzle_2.png)
-![Sudoku Master Successful Results](./05_check_puzzle_1.png)
-![Sudoku Master Error Result](./06_check_puzzle_2.png)
-![Sudoku Master View History](./07_view_puzzle_1.png)
-![Sudoku Master View History](./08_view_puzzle_2.png)
+![Sudoku Master New Puzzle](./image/02_new_puzzle_1.png)
+![Sudoku Master Types of Inputs](./image/03_new_puzzle_2.png)
+![Sudoku Master Successful Results](./image/05_check_puzzle_1.png)
+![Sudoku Master Error Result](./image/06_check_puzzle_2.png)
+![Sudoku Master View History](./image/07_view_puzzle_1.png)
+![Sudoku Master View History](./image/08_view_puzzle_2.png)
 
 
 ## 📞 Contact
