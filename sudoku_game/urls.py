@@ -18,7 +18,22 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+# =============================================================================
+# MAIN URL PATTERNS
+# =============================================================================
+
 urlpatterns = [
+    # Django Admin Interface
+    # Access at: /admin/
+    # Provides administrative interface for managing users, sessions, and app data
+    # Requires superuser credentials (create with: python manage.py createsuperuser)
     path("admin/", admin.site.urls),
+    
+    # Sudoku Game Application
+    # Access at: /sudoku/
+    # All game-related URLs are handled by the sudoku app's URL configuration
+    # See sudoku/urls.py for detailed routing within the application
     path("sudoku/", include("sudoku.urls")),
+    
+    # Note: Root URL (/) is not used here
 ]
